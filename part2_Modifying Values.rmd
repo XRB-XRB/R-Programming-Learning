@@ -2,15 +2,17 @@
 title: "Untitled"
 author: "Rongbing Xv"
 date: "2023-08-11"
-output: 
+output:
+  word_document:
+    toc: yes
   html_document:
     theme: cosmo
     code_folding: show
     highlight: tango
-    toc: true
-    toc_float: true
+    toc: yes
+    toc_float: yes
 params:
-  spotlight: "Houston"
+  spotlight: Houston
 ---
 
 ```{r setup, include=FALSE}
@@ -45,4 +47,178 @@ deck = data.frame(face = c("king", "queen", "jack", "ten", "nine", "eight", "sev
 
 ```{r}
 deck2 = deck#后续操作使用deck2，以免破坏原始数据
+```
+
+为\"战争\"游戏制作deck3
+
+### 7.0.1 改变原值
+
+R中可以使用**符号系统(Notions)**和**赋值运算(\<-/=)**来修改原值。
+
+在\"战争\"游戏中，游戏规则规定牌面为**ace**的卡牌所对应的点数值为14（初始为13）。如果牌组没有被打乱过，那么每过十三张我们就会遇到**ace**牌，我们可以手动记住他们对应的位置：13，26，39，52来改变他们的对应点数值。
+
+```{r eval=FALSE, include=FALSE}
+deck2$value[c(13,26,39,52)] = c(14,14,14,14)
+# 或者
+deck2$value[c(13,26,39,52)] = 14
+```
+
+然而，如果牌被洗过了，那么就需要一些**逻辑判断**来让R帮助我们定位它们的位置，以进行后续的修改：
+
+```{r}
+shuffle = function(deck2){
+  random = sample(1:52,size = 52)
+  deck2 = deck2[random,]
+}
+```
+
+```{r}
+deck3 = shuffle(deck2)#洗牌
+head(deck3)
+```
+
+### 7.0.2 Logical Subsetting逻辑提取子集
+
+R具有七种逻辑运算符：
+
+| **Operator** | **Syntax**          | **Tests**                        |
+|--------------|---------------------|----------------------------------|
+| `>`          | `a > b`             | Is a greater than b?             |
+| `>=`         | `a >= b`            | Is a greater than or equal to b? |
+| `<`          | `a < b`             | Is a less than b?                |
+| `<=`         | `a <= b`            | Is a less than or equal to b?    |
+| `==`         | `a == b`            | Is a equal to b?                 |
+| `!=`         | `a != b`            | Is a not equal to b?             |
+| `%in%`       | `a %in% c(a, b, c)` | Is a in the group c(a, b, c)?    |
+
+来测试一下打乱的牌组中有几张**ace**?
+
+```{r}
+sum(deck3$face == "ace")
+```
+
+使用逻辑语句来对ace牌的对应数值进行更改：
+
+```{r}
+  deck3$value[deck3$face == "ace"] = 14
+deck3
+```
+
+------------------------------------------------------------------------
+
+## 为hearts游戏制作deck4
+
+```{r}
+deck4 = deck2
+deck4$value = 0
+head(deck4) #此时deck4所有牌对应值为0
+```
+
+Assign a value of 1 to every card in deck4 that has a suit of **hearts**.
+
+```{r}
+deck4$value[deck4$suit == "hearts"] = 1
+tail(deck4)
+```
+
+如果我们要把**spades花色**的**queen牌**所对应的值改为13呢？如何能让逻辑判断同时满足两个条件限制？此时需要布尔运算符Boolean Operators来把多个逻辑判断进行组合。
+
+### 7.0.3布尔运算符
+
+| **Operator** | **Syntax**                      | **Tests**                                                         |
+|------------------------|------------------------|------------------------|
+| `&`          | `cond1 & cond2`                 | Are both `cond1` and `cond2` true?                                |
+| `|`          | `cond1 | cond2`                 | Is one or more of `cond1` and `cond2` true?                       |
+| `xor`        | `xor(cond1, cond2)`             | Is exactly one of `cond1` and `cond2` true?                       |
+| `!`          | `!cond1`                        | Is `cond1` false? (e.g., `!` flips the results of a logical test) |
+| `any`        | `any(cond1, cond2, cond3, ...)` | Are any of the conditions true?                                   |
+| `all`        | `all(cond1, cond2, cond3, ...)` | Are all of the conditions true?                                   |
+
+实现刚刚的需求：
+
+```{r}
+deck4$value[deck4$face == "queen" & deck4$suit == "spades"] = 13
+deck4$value[deck4$suit == "spades"]#此时黑桃queen对应的值为13
+```
+
+------------------------------------------------------------------------
+
+测试：
+
+If you think you have the hang of logical tests, try converting these sentences into tests written with R code. To help you out, I\'ve defined some R objects after the sentences that you can use to test your answers:
+
+-   Is w positive?
+
+-   Is x greater than 10 and less than 20?
+
+-   Is object y the word February?
+
+-   Is *every* value in z a day of the week?
+
+```{r}
+w <- c(-1, 0, 1)
+x <- c(5, 15)
+y <- "February"
+z <- c("Monday", "Tuesday", "Friday")
+```
+
+solution：
+
+```{r}
+w > 0
+x > 10 & x < 20
+y == "February"
+z %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+```
+
+## 为\"二十一点\"游戏制作deck5:
+
+在二十一点中，每张**数字牌**的值等于其面值。每张**花牌（K、Q 或 J）**的值为 10。最后，每张**ACE** 的值为 11 或 1，具体取决于游戏的最终结果。
+
+```{r}
+deck5 = deck
+head(deck5,13)
+```
+
+修改对应的点数值：
+
+```{r}
+deck5$value[deck5$face == "jack"|deck5$face == "queen"|deck5$face == "king"] = 10
+deck5
+#或者：
+# facecard <- deck5$face %in% c("king", "queen", "jack")
+# deck5$value[facecard] <- 10
+```
+
+很难决定 ACE 的对应值是多少，因为它们的确切值会随着牌局的不同而变化。每手牌结束时，如果玩家的牌总点数不超过 21，则 ACE 等于 11。否则，ACE等于 1。ACE 的实际值将取决于玩家手中的其他牌。这是一个信息缺失的情况。目前，您没有足够的信息来为 ACE 卡分配正确的分值。
+
+### 7.0.4缺失信息 NA (Not Available)
+
+#### 7.0.4.1缺失值的传播性：
+
+```{r}
+na = c(NA,1:50)
+na
+mean(na)#包含NA，返回NA
+```
+
+当运算过程中一旦包含NA，那么结果就会返回NA，从而使计算过程无法进行。此时，需要参数`na.rm` 来删除缺失值：
+
+```{r}
+mean(na,na.rm = TRUE)
+```
+
+#### 7.0.4.2 is.na
+
+判断一组数据中是否有缺失值：
+
+```{r}
+is.na(na)
+```
+
+现在，我们将所有ACE牌的点数设为NA：
+
+```{r}
+deck5$value[deck5$face == "ace"] = NA
+head(deck5,13)
 ```
