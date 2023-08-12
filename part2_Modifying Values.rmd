@@ -1,0 +1,48 @@
+---
+title: "Untitled"
+author: "Rongbing Xv"
+date: "2023-08-11"
+output: 
+  html_document:
+    theme: cosmo
+    code_folding: show
+    highlight: tango
+    toc: true
+    toc_float: true
+params:
+  spotlight: "Houston"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 7 Modifying Values
+
+你准备好用你的虚拟牌组玩一些游戏了吗？不要那么快！你牌组中的点数系统与许多纸牌游戏不太一致。例如，在战争和扑克中，王牌的得分通常高于国王。它们的点值是14，而不是1。
+
+在这项任务中，你将改变牌组的点数系统三次，以匹配三种不同的游戏：战争、红心大战和21点(war, hearts, and blackjack)。这些游戏中的每一个都会教你一些关于修改数据集内部值的不同内容。首先制作一个可以操作的牌组副本。这将确保您始终拥有一份原始的牌组（如果出现问题）：
+
+```{r}
+deck = data.frame(face = c("king", "queen", "jack", "ten", "nine", "eight", "seven", "six",
+                          "five", "four", "three", "two", "ace", "king", "queen", "jack", "ten", 
+                          "nine", "eight", "seven", "six", "five", "four", "three", "two", "ace", 
+                          "king", "queen", "jack", "ten", "nine", "eight", "seven", "six", "five", 
+                          "four", "three", "two", "ace", "king", "queen", "jack", "ten", "nine", 
+                          "eight", "seven", "six", "five", "four", "three", "two", "ace"),
+                  suit = c("spades", "spades", "spades", "spades", "spades", "spades", 
+                          "spades", "spades", "spades", "spades", "spades", "spades", "spades", 
+                          "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", 
+                          "clubs", "clubs", "clubs", "clubs", "clubs", "diamonds", "diamonds", 
+                          "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", 
+                          "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "hearts", 
+                          "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", 
+                          "hearts", "hearts", "hearts", "hearts", "hearts"),
+                  value = c(13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 
+                           7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 
+                           10, 9, 8, 7, 6, 5, 4, 3, 2, 1))#保留原始数据
+```
+
+```{r}
+deck2 = deck#后续操作使用deck2，以免破坏原始数据
+```

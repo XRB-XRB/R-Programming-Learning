@@ -1,0 +1,176 @@
+---
+title: "part2_ R Notation"
+author: "Rongbing Xv"
+date: "2023-08-11"
+output: 
+  html_document:
+    theme: cosmo
+    code_folding: show
+    highlight: tango
+    toc: true
+    toc_float: true
+params:
+  spotlight: "Houston"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 6. R Notation -R符号系统 学习
+
+上一节中，我们创建了一副扑克牌：
+
+```{r}
+deck = data.frame(face = c("king", "queen", "jack", "ten", "nine", "eight", "seven", "six",
+                          "five", "four", "three", "two", "ace", "king", "queen", "jack", "ten", 
+                          "nine", "eight", "seven", "six", "five", "four", "three", "two", "ace", 
+                          "king", "queen", "jack", "ten", "nine", "eight", "seven", "six", "five", 
+                          "four", "three", "two", "ace", "king", "queen", "jack", "ten", "nine", 
+                          "eight", "seven", "six", "five", "four", "three", "two", "ace"),
+                  suit = c("spades", "spades", "spades", "spades", "spades", "spades", 
+                          "spades", "spades", "spades", "spades", "spades", "spades", "spades", 
+                          "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", "clubs", 
+                          "clubs", "clubs", "clubs", "clubs", "clubs", "diamonds", "diamonds", 
+                          "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", 
+                          "diamonds", "diamonds", "diamonds", "diamonds", "diamonds", "hearts", 
+                          "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", "hearts", 
+                          "hearts", "hearts", "hearts", "hearts", "hearts"),
+                  value = c(13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 
+                           7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 13, 12, 11, 
+                           10, 9, 8, 7, 6, 5, 4, 3, 2, 1))
+head(deck)
+```
+
+现在需要进行发牌和洗牌。
+
+## 6.1Selecting Values（发一张牌）
+
+R的符号系统，允许我们使用数据框的名称，后跟一对硬括号：来提取数据框中的值：
+
+`deck[ , ]`
+
+R 将使用第一个索引对数据帧的行进行子集化，并使用第二个索引对列进行子集化。
+
+可以使用以下方式创建索引:
+
+-   Positive integers
+
+-   Negative integers
+
+-   Zero
+
+-   Blank spaces
+
+-   Logical values
+
+-   Names
+
+### 6.1.1正整数索引
+
+R Notion使用线性代数的ij表示法，假设我们要提取数据框第一行的值，可进行如下操作：
+
+```{r}
+deck[1,]
+deck[1,c(1,2,3)]
+deck[1,1:3]
+# 三种形式均可
+```
+
+可在`deck[]` 函数添加drop=false参数来返回单列数据，否则在提取单列数据时R会以向量的形式返回。
+
+```{r}
+deck[,1]
+deck[,1,drop=FALSE]
+```
+
+### 6.1.2负整数索引
+
+索引时负整数的作用与正整数完全相反。R 将返回除负索引中的元素之外的所有元素。
+
+```{r}
+deck[-(2:52), 1:3] ## face   suit value ## king spades    13
+```
+
+### 6.1.3 Zero
+
+```{r}
+deck[0, 0] ## data frame with 0 columns and 0 rows，返回空的对象
+```
+
+### 6.1.4 Blank Spaces 
+
+使用空格告诉 R 提取维度中的每个值
+
+```{r}
+deck[1, ] 
+```
+
+### 6.1.5 Logical Values 逻辑值
+
+```{r}
+deck[1, c(TRUE, TRUE, FALSE)]
+```
+
+R 将返回对应于 a 的每一行TRUE对应的元素。
+
+### 6.1.6 Names 
+
+按数据框中列的名称返回元素，可用于提取自己需要的变量数据：
+
+```{r}
+deck[1, c("face", "suit", "value")]
+```
+
+## 6.2 发牌
+
+建立一个每次发牌组中第一张牌的函数：
+
+```{r}
+deal = function(deck){
+  deck[1,]
+}
+deal(deck)
+```
+
+## 6.3 Shuffle the Deck 洗牌
+
+此处，可以使用`sample()`函数实现对每行数据随机排列：
+
+```{r}
+random = sample(1:52,size = 52)#利用不放回抽样生成随机排列
+random
+deck_r = deck[random,]#实现"洗牌"
+deck_r
+```
+
+把上述操作包装成一个洗牌函数：
+
+```{r}
+shuffle = function(deck){
+  random = sample(1:52,size = 52)
+  deck_r = deck[random,]
+}
+deck_r1=shuffle(deck)
+deal(deck_r1)#实现每洗一次牌，然后发一张牌
+```
+
+把以上步骤总和起来，实现每洗一次牌同时发一张牌。
+
+## 6.4美元符号和双括号
+
+可以使用`$`语法从数据框和列表中提取值。（通常用于提取数据集中的变量）
+
+```{r}
+mean(deck$value) #提取deck数据集中的变量value并计算均值
+```
+
+双括号：
+
+如果把列表想象成装载有货物的火车，那么单层括号`[]`返回某一节车厢，双层括号`[[]]`返回该车厢内的\"货物\"。例如：
+
+```{r}
+lst <- list(numbers = c(1, 2), logical = TRUE, strings = c("a", "b", "c"))
+lst[1]#单层括号
+lst[[1]]
+```
