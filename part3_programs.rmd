@@ -1,0 +1,42 @@
+---
+title: "Part3"
+author: "Rongbing Xv"
+date: "2023-08-13"
+output: 
+  html_document:
+    theme: cosmo
+    code_folding: show
+    highlight: tango
+    toc: true
+    toc_float: true
+params:
+  spotlight: "Houston"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Project 3: Slot Machine 老虎机
+
+老虎机类似于街机游戏，侧面有一个杠杆。只需支付\"少量\"费用，您就可以拉动控制杆，机器将生成三个符号的随机组合。如果出现正确的组合，您就可以赢得奖品，甚至可能赢得头奖。
+
+在此项目中，您将根据加拿大马尼托巴省的一些现实生活中的视频彩票终端建模，构建一台真实的、可运行的老虎机。
+
+This project will teach you how to write programs and run simulations in R. You will also learn how to:
+
+-   Use a practical strategy to design programs
+
+-   Use `if` and `else` statements to tell R what to do when
+
+-   Create lookup tables to find values
+
+-   Use `for`, `while`, and `repeat` loops to automate repetitive operations
+
+-   Use S3 methods, R\'s version of Object-Oriented Programming
+
+-   Measure the speed of R code
+
+-   Write fast, vectorized R code
+
+# 9 Programs 程序

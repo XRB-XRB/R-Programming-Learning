@@ -55,7 +55,7 @@ deck2 = deck#后续操作使用deck2，以免破坏原始数据
 
 R中可以使用**符号系统(Notions)**和**赋值运算(\<-/=)**来修改原值。
 
-在"战争"游戏中，游戏规则规定牌面为**ace**的卡牌所对应的点数值为14（初始为13）。如果牌组没有被打乱过，那么每过十三张我们就会遇到**ace**牌，我们可以手动记住他们对应的位置：13，26，39，52来改变他们的对应点数值。
+在"战争"游戏中，游戏规则规定牌面为**ace**的卡牌所对应的点数值为14（初始为1）。如果牌组没有被打乱过，那么每过十三张我们就会遇到**ace**牌，我们可以手动记住他们对应的位置：13，26，39，52来改变他们的对应点数值。
 
 ```{r eval=FALSE, include=FALSE}
 deck2$value[c(13,26,39,52)] = c(14,14,14,14)
@@ -347,3 +347,98 @@ head(a, 3)
 其次，`shuffle`返回的牌组副本`deck`，其中可能**缺少**已发出的牌。如果将发出的牌放回牌堆然后洗牌，效果会更好。这就是现实生活中洗牌时发生的情况。
 
 想办法对以上两点进行改进：
+
+**我的思路：**可以构建一个充当中介的牌堆,暂时失败了**:(**
+
+```{r}
+# deck_s = DECK 
+# empty_matrix <- matrix(nrow = 0, ncol = 3)#创建一个空的矩阵
+# newcards <- as.data.frame(empty_matrix) #把矩阵转化为数据框作为中介牌堆
+# # newcards = data.frame(face = character(0),suit = character(0),value = numeric(0) ) #一个新牌堆记录已经发过的牌！！！！
+```
+
+**开始牌局：**
+
+```{r}
+#首先进行发牌
+# deal <- function() {   
+#   card <- deck[1, ] 
+#   assign("deck", deck[-1, ], envir = globalenv())   
+#   card
+#   newcards = rbind(newcards,card)#把发过的牌添加到中介牌堆里
+# }
+# deal()
+# head(deck)
+# head(newcards)
+```
+
+我们把发出的牌收录到一起：
+
+```{r}
+
+```
+
+```{r}
+
+# # 一局游戏结束，重新洗牌
+# shuffle = function(deck_s1){
+#   random = sample(1:52,size = 52)
+#   deck_s1 = deck_s[random,]
+# }
+# shuffle(deck_s1)
+# head(deck_s1)
+```
+
+答案思路：
+
+```{r}
+shuffle <- function(){
+  random <- sample(1:52, size = 52)
+  assign("deck", DECK[random, ], envir = globalenv())#向前看，忘掉发过的牌，直接用之前保存的DECK来更新全局环境中已经发生改变的deck
+}
+shuffle()
+head(deck)
+```
+
+## 8.6 Closures闭包
+
+这部分有些复杂困难，需要多次阅读[章节8.6](https://rstudio-education.github.io/hopr/environments.html)，理清各个环境之间的嵌套关系。
+
+下面给出成果：
+
+```{r}
+setup <- function(deck) {
+  DECK <- deck
+
+  DEAL <- function() {
+    card <- deck[1, ]
+    assign("deck", deck[-1, ], envir = parent.env(environment()))
+    card
+  }
+
+  SHUFFLE <- function(){
+    random <- sample(1:52, size = 52)
+    assign("deck", DECK[random, ], envir = parent.env(environment()))
+ }
+
+ list(deal = DEAL, shuffle = SHUFFLE)
+}
+
+cards <- setup(deck)
+deal <- cards$deal
+shuffle <- cards$shuffle
+```
+
+此时R中各个对象存在的环境之间关系如图所示：
+
+![](images/env.png){width="372"}
+
+## 8.7总结
+
+R 将其对象保存在类似于计算机文件系统的环境系统中。如果您了解这个系统，您就可以预测 R 将如何查找对象。如果您在命令行调用一个对象，R 将在全局环境中查找该对象，然后查找全局环境的父对象，一次一个环境地在环境树中向上查找。
+
+当您从函数内部调用对象时，R 将使用略有不同的搜索路径。当您运行函数时，R 会创建一个新环境来执行命令。该环境将是最初定义该函数的环境的子环境。这可能是全球环境，但也可能不是。您可以使用此行为来创建闭包，闭包是链接到受保护环境中的对象的函数。
+
+当您熟悉 R 的环境系统后，您可以使用它来产生优雅的结果，就像我们在这里所做的那样。然而，了解环境系统的真正价值来自于了解 R 函数如何完成其​​工作。当函数未按预期执行时，您可以利用这些知识来找出问题所在。
+
+作为一名数据科学家，存储数据并不是你将面临的唯一后勤任务。你经常想用你的数据来完成任务，这些任务非常复杂或重复，没有电脑很难完成。有些事情可以用R及其包中已经存在的函数来完成，但其他事情则不能。如果您可以编写自己的程序供计算机遵循，那么您将成为最全能的数据科学家。R可以帮你做到这一点,项目 3：老虎机将教您使用 R 编写程序的最有用的技能。
