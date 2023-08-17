@@ -425,7 +425,8 @@ symbols = get_symbols()
 #根据三个符号进行奖励分配
 score <- function(symbols) {
   # identify case
-  same <- symbols[1] == symbols[2] && symbols[2] == symbols[3]
+  # same <- symbols[1] == symbols[2] && symbols[2] == symbols[3]
+  same = all(symbols == symbols[1])
   bars <- symbols %in% c("B", "BB", "BBB")
   # get prize
   if (same) {
@@ -450,5 +451,115 @@ play <- function() {
   score(symbols)
 }
 #调用老虎机
+play()
+```
+
+# 10. S3
+
+## 10.1 S3系统
+
+S3 指的是 R 中内置的类系统。该系统控制 R 如何处理不同类的对象。某些 R 函数将查找对象的 S3 类，然后做出不同的响应行为。
+
+R\'s S3 system is built around three components: **attributes** (especially the `class` attribute), **generic functions**, and **methods**.
+
+您可以使用`attr`;将任何常规属性添加到对象中 您还可以用来`attr`查找对象的任何属性的值。
+
+**Exercise 10.1 (Add an Attribute)** Modify `play` to return a prize that contains the symbols associated with it as an attribute named `symbols`. Remove the redundant call to `print(symbols)`:
+
+```         
+play <- function() {
+  symbols <- get_symbols()
+  print(symbols)
+  score(symbols)
+}
+```
+
+修改：
+
+```{r}
+play = function(){
+  symbols = get_symbols()
+  prize = score(symbols)
+  attr(prize,"symbols") = symbols
+  prize
+}
+```
+
+```{r}
+play()
+```
+
+对函数输出结果显示进行美化：
+
+```{r}
+one_play = play()
+slot_display <- function(prize){
+
+  # extract symbols
+  symbols <- attr(prize, "symbols")
+
+  # collapse symbols into single string
+  symbols <- paste(symbols, collapse = " ")
+
+  # combine symbol with prize as a character string
+  # \n is special escape sequence for a new line (i.e. return or enter)
+  string <- paste(symbols, prize, sep = "\n$")
+
+  # display character string in console without quotes
+  cat(string)
+}
+
+slot_display(one_play)
+## B 0 B
+## $0
+```
+
+使用`slot_display()`函数来输出`play()`函数的结果
+
+```{r}
+slot_display( play() )
+```
+
+## 10.3  Generic Functions
+
+`print` is not a normal function; it is a *generic* function. This means that `print` is written in a way that lets it do different things in different cases.
+
+## 10.4 Method
+
+当您调用 时`print`，`print`调用一个特殊函数`UseMethod.`
+
+您可以通过调用`methods`函数来查看通用函数存在哪些方法。例如，`print`有近 200 个方法（这让您了解 R 中存在多少个类）：
+
+```{r}
+head(methods(print))
+```
+
+由泛型函数、方法和基于类的调度组成的系统被称为 S3，因为它起源于 S 的第三个版本.
+
+10.4.1 方法调用
+
+**练习10.2（创建一个打印方法）** 为slots 类编写一个新的打印方法。该方法应该调用`slot_display`以返回格式正确的老虎机输出
+
+```{r}
+print.slots <- function(x, ...) {
+  slot_display(x)
+}
+```
+
+让我们确保每台老虎机的输出都具有类别`slots`
+
+**练习10.3（添加一个类）** 修改`play`函数，以便将其分配`slots`给`class`对应的输出属性：
+
+```{r}
+play <- function() {
+  symbols <- get_symbols()
+  structure(score(symbols), symbols = symbols, class = "slots")
+}
+class(play())#成功为play添加了slots类
+```
+
+R 将以正确的老虎机格式显示它们：
+
+```{r}
 play()
 ```

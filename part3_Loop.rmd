@@ -1,0 +1,28 @@
+---
+title: "Untitled"
+author: "Rongbing Xv"
+date: "`r format(Sys.time(), '%Y-%m-%d %H:%M:%S')`"
+output: 
+  html_document:
+    theme: cosmo
+    code_folding: show
+    highlight: tango
+    toc: true
+    toc_float: true
+params:
+  spotlight: "Houston"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 11. Loop
+
+循环是 R 重复任务的方法，这使得它们成为编程模拟的有用工具。本章将教你如何使用R的循环工具。
+
+让我们使用该`score`函数来解决实际问题。
+
+您的老虎机是根据被指控欺诈的真实机器建模的。这些机器似乎每 1 美元支付 40 美分，但制造商声称他们每 1 美元支付 92 美分。您可以使用该`score`程序计算机器的准确支付率。支付率将是老虎机奖金的预期值
+
+## 11.1 Expected Values
