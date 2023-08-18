@@ -17,6 +17,12 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```         
+load("/Users/xrb/Desktop/R语言学习/R Programming/Hands-On Programming with R/R Programming Learning/slot_machine.RData") #调用老虎机的工作环境
+```
+
+`{# load("/Users/xrb/Desktop/R语言学习/R Programming/Hands-On Programming with R/R Programming Learning/slot_machine.RData") #调用老虎机的工作环境}`
+
 # 11. Loop
 
 循环是 R 重复任务的方法，这使得它们成为编程模拟的有用工具。本章将教你如何使用R的循环工具。
@@ -26,3 +32,313 @@ knitr::opts_chunk$set(echo = TRUE)
 您的老虎机是根据被指控欺诈的真实机器建模的。这些机器似乎每 1 美元支付 40 美分，但制造商声称他们每 1 美元支付 92 美分。您可以使用该`score`程序计算机器的准确支付率。支付率将是老虎机奖金的预期值
 
 ## 11.1 Expected Values
+
+$E(x)=n∑i=1(xi⋅P(xi))$
+
+随机事件的期望值是一种加权平均值；它是事件的每个可能结果的总和，并按每个结果发生的概率进行加权.
+
+对于计算两个骰子和的概率问题时，我们可以把步骤进行如下拆解：
+
+-   列出所有可能的结果
+
+-   确定每个结果的*价值*（这里只是骰子的价值）
+
+-   计算每个结果发生的概率
+
+当您掷两个骰子时，总共会出现 36 种不同的结果，列出这些组合可能很乏味，但 R 有一个函数可以提供帮助。
+
+## 11.2 expand.grid
+
+R 中的函数`expand.grid`提供了一种快速写出*n 个*向量中元素的每种组合的方法。例如，您可以列出两个骰子的每种组合。为此，请运行`expand.grid`以下两个副本`die`：
+
+```{r}
+die = c(1:6)
+```
+
+```{r}
+rolls = expand.grid(die,die)
+rolls
+```
+
+计算出每次投掷一对骰子的点数和，添加到组合数据框中：
+
+```{r}
+rolls$value = rolls$Var1 + rolls$Var2
+rolls
+```
+
+接下来，计算独立事件同时发生的概率：
+
+$P(A&B&C&...)=P(A)⋅P(B)⋅P(C)⋅...$
+
+一个不均匀的骰子1到6各点数数显的概率分别为：1/8,1/8,1/8,1/8,1/8,3/8
+
+首先，可以使用lookup table 将第一个骰子的点数和概率做一个对应：\
+
+```{r}
+prob = c("1"=1/8,"2"=1/8,"3"=1/8,"4"=1/8,"5"=1/8,"6"=3/8)
+prob
+```
+
+然后在数据框rolls中生成一个变量来记录第一个骰子的点数概率：
+
+```{r}
+rolls$prob1 = prob[rolls$Var1]
+rolls
+```
+
+第二个骰子概率同理：
+
+```{r}
+rolls$prob2 = prob[rolls$Var2]
+rolls
+```
+
+计算点数和所对应的概率：
+
+```{r}
+rolls$prob = rolls$prob2*rolls$prob1
+rolls
+```
+
+现在我们可以计算出一对不均匀骰子和的期望值了：
+
+```{r}
+sum(rolls$value*rolls$prob)
+```
+
+让我们使用我们的方法来计算老虎机奖金的预期值。我们将遵循刚刚采取的相同步骤：
+
+-   我们将列出玩这台机器的每一种可能的结果。这将是三个老虎机符号的每种组合的列表。
+
+-   当你玩机器时，我们会计算得到每种组合的概率。
+
+-   我们将确定每个组合将赢得的奖品。
+
+```{r}
+symbol = c("DD","7","BBB","BB","B","C","0")
+symbol
+symbol2 = expand.grid(symbol,symbol,symbol)
+head(symbol2) #生成形状的排列组合
+prob0 = c("DD"=0.03, "7"=0.03, "BBB"=0.06,"BB"= 0.1,"B"= 0.25, "C"=0.01, "0"=0.52) #生成查找表
+symbol2$prob1 = prob0[symbol2$Var1] #第一个形状的概率
+symbol2$prob2 = prob0[symbol2$Var2] #第二个
+symbol2$prob3 = prob0[symbol2$Var3] #第三个
+symbol2$prob = symbol2$prob1*symbol2$prob2*symbol2$prob3 #总概率
+head(symbol2)
+
+#奖金匹配函数
+score <- function(symbols) {
+  # identify case
+  same <- symbols[1] == symbols[2] && symbols[2] == symbols[3]
+  bars <- symbols %in% c("B", "BB", "BBB")
+  # get prize
+  if (same) {
+    payouts <- c("DD" = 100, "7" = 80, "BBB" = 40, "BB" = 25,    "B" = 10, "C" = 10, "0" = 0) #用向量构建各个符号对应的奖励值
+    prize <- unname(payouts[symbols[1]])
+  } else if (all(bars)) {
+    prize <- 5 # 情况二只有一种奖励值
+  } else {
+    cherries = sum(symbols == "C")
+    prize <- c(0, 2, 5)[cherries + 1] #上方的if树可以用查找table的形式实现
+  }
+  # adjust for diamonds
+  diamonds = sum(symbols == "DD")
+  prize = prize*2^diamonds
+  prize
+}
+#获得每个形状组合的对应奖金：
+symbols <- c(symbol2[1, 1], symbol2[1, 2], symbol2[1, 3])
+score(symbols) #获得了第一行形状组合的奖金
+#现在要重复这项命令来获取总共343行结果对应的奖金值
+
+
+```
+
+可以使用for循环完成。
+
+## 11.3 for Loops
+
+for循环多次重复代码块，一组输入中的每个元素重复一次。在 R 语法中，这看起来像：
+
+```         
+for (value in that) {
+  this
+}
+```
+
+例子：
+
+```{r}
+for (value in c("My", "first", "for", "loop")) {
+  print("one run")
+}
+```
+
+for 循环中的符号`value`就像函数中的参数一样。for 循环将创建一个名为 的对象`value`，并在每次运行循环时为其分配一个新值。循环中的代码可以通过调用该`value`对象来访问该值。
+
+例子：
+
+```{r}
+for (value in c("My", "second", "for", "loop")) {
+  print(value) #调用参数value
+}
+```
+
+你可以在for循环中使用任何你喜欢的参数符号来做同样的事情，只要该符号出现在for后面的括号中。
+
+例子：
+
+```{r}
+for (value in c("My", "second", "for", "loop")) {
+  print(value) #调用参数word
+}
+
+for (i in c("My", "second", "for", "loop")) {
+  print(i) #调用参数i
+}
+```
+
+保存循环结果：
+
+要保存`for`循环的输出结果，您必须编写循环，以便它在运行时保存自己的输出。您可以通过在运行`for`循环之前创建一个空向量或列表来完成此操作。然后使用`for`循环来填充向量或列表。循环完成后，您将能够访问向量或列表，其中现在包含您的所有结果。
+
+例子：
+
+```{r}
+chars = vector(length = 4) #构建一个空向量
+#构建一个循环来填充此向量
+words = c("My","fourth", "for", "loop")
+for (i in 1:4) {
+  chars[i] = words[i]
+}
+chars
+```
+
+在实践中，您会发现`for`循环并不是用来运行代码，而是用代码结果填充向量和列表。
+
+现在，让我们使用`for`循环来填充每一行奖金：
+
+```{r}
+symbol2$prize = NA #新建一个空的变量
+
+
+for (i in 1:nrow(symbol2)) {
+  symbols <- c(symbol2[i, 1], symbol2[i, 2], symbol2[i, 3])
+  symbol2$prize[i] = score(symbols)
+}
+head(symbol2) #成功对应
+
+```
+
+计算老虎机奖金期望：
+
+```{r}
+sum(symbol2$prize*symbol2$prob)
+```
+
+调整`score`函数让钻石**DD**充当百搭的作用：
+
+```
+score <- function(symbols) {
+  
+  diamonds <- sum(symbols == "DD")
+  cherries <- sum(symbols == "C")
+  
+  # identify case
+  # since diamonds are wild, only nondiamonds 
+  # matter for three of a kind and all bars
+  slots <- symbols[symbols != "DD"]
+  same <- length(unique(slots)) == 1
+  bars <- slots %in% c("B", "BB", "BBB")
+
+  # assign prize
+  if (diamonds == 3) {
+    prize <- 100
+  } else if (same) {
+    payouts <- c("7" = 80, "BBB" = 40, "BB" = 25,
+      "B" = 10, "C" = 10, "0" = 0)
+    prize <- unname(payouts[slots[1]])
+  } else if (all(bars)) {
+    prize <- 5
+  } else if (cherries > 0) {
+    # diamonds count as cherries
+    # so long as there is one real cherry
+    prize <- c(0, 2, 5)[cherries + diamonds + 1]
+  } else {
+    prize <- 0
+  }
+  
+  # double for each diamond
+  prize * 2^diamonds
+}
+
+
+symbol2$prize = NA #新建一个空的变量
+
+
+for (i in 1:nrow(symbol2)) {
+  symbols <- c(symbol2[i, 1], symbol2[i, 2], symbol2[i, 3])
+  symbol2$prize[i] = score(symbols)
+}
+symbol2 #成功对应
+
+```
+
+## 11.4 while Loops
+
+对于`for`循环，R有两个同伴：`while`循环和`repeat`循环。`while`循环在某个条件保持为TRUE时重新运行块。要创建`while`循环，请在`while`后面加上一个条件和一块代码，如下所示：
+
+``` r
+while (condition) {
+  code
+}
+```
+
+如果`condition`计算结果为`TRUE`，`while`将运行大括号之间的代码。如果`condition`计算结果为`FALSE`，`while`将结束循环。
+
+您可以使用`while`循环来执行需要不同迭代次数的操作，例如计算玩老虎机需要多长时间才能破产（如下所示）。然而，在实践中，`while`循环比R 中的`for`循环要少得多：
+
+```         
+play_till_broke = function(start_with){
+  cash = start_with #起始资金
+  n = 0 #玩的次数
+  while (cash>0) {
+    cash = cash - 1 + play()
+    n <- n+1
+  }
+  n
+}
+```
+
+```         
+play_till_broke(10)
+```
+
+## 11.5 repeat Loops
+
+重复循环甚至比while循环更基本。他们将重复一段代码，直到你告诉他们停止（点击Escape），或者直到他们遇到命令break，这将停止循环。
+
+你可以使用重复循环来重新创建plays_till_broke，这是我的函数，模拟玩老虎机时赔钱的时间：
+
+```         
+plays_till_broke <- function(start_with) {
+  cash <- start_with
+  n <- 0
+  repeat {
+    cash <- cash - 1 + play()
+    n <- n + 1
+    if (cash <= 0) {
+      break
+    }
+  }
+  n
+}
+
+plays_till_broke(5)
+## 237
+```
+
+## 11.6 Summary
+
+不幸的是，R中的循环有时可能比其他语言中的循环慢。结果，R的循环受到了不好的评价。这一声誉并非完全应得，但它确实突出了一个重要问题。速度对数据分析至关重要。当你的代码运行得很快时，你可以使用更大的数据，并在时间或计算能力耗尽之前对其做更多的处理。Speed将教你如何用R快速编写循环和一般快速代码。在那里，你将学会编写矢量化代码**vectorized code**，这是一种利用R所有优势的闪电般快速的代码风格。
